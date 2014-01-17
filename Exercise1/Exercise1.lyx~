@@ -1,0 +1,620 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Exercise 1, TTK4145
+\end_layout
+
+\begin_layout Author
+Knut Brekke and Martin Skow Røed
+\end_layout
+
+\begin_layout Part
+Why concurrency?
+\end_layout
+
+\begin_layout Standard
+Concurrency lets us perform certain tasks faster as we can divide the tasks
+ into independent subtasks, so they can be performed in parallel.
+ If you have a big asynchronous task, you can run that in a separate thread,
+ not having to deal with the pause/resuming of the task while other things
+ are going on.
+\end_layout
+
+\begin_layout Standard
+Processes runs completely independent and isolated of each other, and can
+ 
+\series bold
+not
+\series default
+ access any shared data.
+ The operating system is allocating resources (memory, CPU time etc) to
+ each indidivual process.
+\end_layout
+
+\begin_layout Standard
+Threads has its own call stack, but they can access shared data of other
+ threads in the same process.
+ As each thread has its own calls tack, it reads the shared data and stores
+ it in its own memory cache.
+ A thread can read the shared data several times.
+ This is the basis is a concurrency problem called 
+\series bold
+visibility
+\series default
+.
+\end_layout
+
+\begin_layout Standard
+Thread 
+\series bold
+A
+\series default
+ and 
+\series bold
+B 
+\series default
+both runs in the same process and can access the shared data.
+ If A reads shared data which is later changed by B without thread A being
+ aware of the changes, we have a visibility problem.
+\end_layout
+
+\begin_layout Standard
+The other main concurrencly problem is called an 
+\series bold
+access
+\series default
+ problem.
+ This is when several threads try to access and change the same shared data
+ at the same time.
+ Both problems can obviously lead to problems for a program without giving
+ any hints as the program may be working with false or outdated data.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Green threads
+\series default
+ are user-level threads, not scheduled by the kernel, used to simulate multi-thr
+eading on platforms that does not provide that capability.
+ 
+\series bold
+Fibers
+\series default
+ are a lightweight thread.
+ While threads depends on the kernels thread scheduler, fibers yield themselves
+ to run another fiber while executing.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+pthread_create() 
+\series default
+starts a new thread in the calling process.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+threading.Thread() 
+\series default
+starts a new thread.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+go
+\series default
+ starts a coroutine, which is closely related to fiber.
+\end_layout
+
+\begin_layout Standard
+The 
+\series bold
+Global Intepreter Lock
+\series default
+ (
+\series bold
+GIL
+\series default
+) is solving the access problem from before.
+ Only the thread with the GIL may operate on objects or call API functions.
+ Without it, multi-threading can he a huge problem, for instance when two
+ thread simultaneously want to increment the reference count, it could end
+ up being incremented only once instead of twice.
+ Because of GIL, only one thread can access it at the same time.
+ The workaround for GIL is called 
+\series bold
+multiprocessing
+\series default
+ which spawns processes using an API similar to how we use 
+\series bold
+threading
+\series default
+.
+ Multiprocessing offers both local and remote concurrency and is not influenced
+ by the GIL as its using subprocesses instead of threads.
+ Processes as explained earlier, can not share data with each other.
+ The multiprocessing module however, has two ways for the processes to communica
+te.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Queues
+\series default
+ are almost identical to a regular queue.
+ One process puts information in, another process can fetch it.
+ The queue is both process and thread safe.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Pipes
+\series default
+ offers connection objects connected by a pipe which is two-way by default.
+ Each connection object has 
+\series bold
+send
+\series default
+ and 
+\series bold
+recv
+\series default
+ methods.
+ You pass one end to the process, and read from the other end in the main
+ thread.
+ The data in the pipe may be corrupted if two processes try to read or write
+ to the same end of the pipe simulatenously.
+\end_layout
+
+\begin_layout Standard
+From 
+\series bold
+GOLANG
+\series default
+'s API, 
+\begin_inset Quotes eld
+\end_inset
+
+GOMAXPROCS sets the maximum number of CPUs that can be executing simultaneously
+ and returns the previous setting
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Part
+Code
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+Python:
+\end_layout
+
+\begin_layout Plain Layout
+
+-----------
+\end_layout
+
+\begin_layout Plain Layout
+
+from threading import Thread
+\end_layout
+
+\begin_layout Plain Layout
+
+def a():
+\end_layout
+
+\begin_layout Plain Layout
+
+	global i
+\end_layout
+
+\begin_layout Plain Layout
+
+	for k in range(1000000):
+\end_layout
+
+\begin_layout Plain Layout
+
+		i += 1
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+def b():
+\end_layout
+
+\begin_layout Plain Layout
+
+	global i
+\end_layout
+
+\begin_layout Plain Layout
+
+	for k in range(1000000):
+\end_layout
+
+\begin_layout Plain Layout
+
+		i -= 1
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+i = 0 
+\end_layout
+
+\begin_layout Plain Layout
+
+p = Thread(target=a) 
+\end_layout
+
+\begin_layout Plain Layout
+
+pp = Thread(target=b) 
+\end_layout
+
+\begin_layout Plain Layout
+
+p.start() 
+\end_layout
+
+\begin_layout Plain Layout
+
+pp.start() 
+\end_layout
+
+\begin_layout Plain Layout
+
+p.join() 
+\end_layout
+
+\begin_layout Plain Layout
+
+pp.join() 
+\end_layout
+
+\begin_layout Plain Layout
+
+print "i =", i
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+-----------
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+>> 2483 
+\end_layout
+
+\end_inset
+
+
+\series default
+
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+C
+\end_layout
+
+\begin_layout Plain Layout
+
+-----------
+\end_layout
+
+\begin_layout Plain Layout
+
+#include <pthread.h>
+\end_layout
+
+\begin_layout Plain Layout
+
+#include <stdio.h>
+\end_layout
+
+\begin_layout Plain Layout
+
+int global_increment = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+void *inc_global() {
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (int i=0; i<100; ++i)
+\end_layout
+
+\begin_layout Plain Layout
+
+		global_increment++;
+\end_layout
+
+\begin_layout Plain Layout
+
+	return NULL;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+void *dec_global() {
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (int i=0; i<100; ++i)
+\end_layout
+
+\begin_layout Plain Layout
+
+		global_increment--;
+\end_layout
+
+\begin_layout Plain Layout
+
+	return NULL;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+int main() {
+\end_layout
+
+\begin_layout Plain Layout
+
+	pthread_t increment_global;      
+\end_layout
+
+\begin_layout Plain Layout
+
+	pthread_t decrease_global;
+\end_layout
+
+\begin_layout Plain Layout
+
+	if(pthread_create(&increment_global, NULL, inc_global, NULL)) {
+\end_layout
+
+\begin_layout Plain Layout
+
+		fprintf(stderr, "Error creating thread 1
+\backslash
+n");
+\end_layout
+
+\begin_layout Plain Layout
+
+		return 1;
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+	if(pthread_create(&decrease_global, NULL, dec_global, NULL)) {
+\end_layout
+
+\begin_layout Plain Layout
+
+		fprintf(stderr, "Error creating thread 2
+\backslash
+n");
+\end_layout
+
+\begin_layout Plain Layout
+
+		return 1;      
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+	if(pthread_join(increment_global, NULL)) {           
+\end_layout
+
+\begin_layout Plain Layout
+
+		fprintf(stderr, "Error joining thread 1
+\backslash
+n");
+\end_layout
+
+\begin_layout Plain Layout
+
+		return 2;
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+	if(pthread_join(decrease_global, NULL)) {
+\end_layout
+
+\begin_layout Plain Layout
+
+		fprintf(stderr, "Error joining thread 2
+\backslash
+n");           
+\end_layout
+
+\begin_layout Plain Layout
+
+		return 2;      
+\end_layout
+
+\begin_layout Plain Layout
+
+	}      
+\end_layout
+
+\begin_layout Plain Layout
+
+	printf("global = %d
+\backslash
+n", global_increment);            	
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\end_layout
+
+\begin_layout Plain Layout
+
+	return 0; 
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+------
+\end_layout
+
+\begin_layout Plain Layout
+
+global = -9
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
