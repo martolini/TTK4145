@@ -3,10 +3,10 @@ from channels import INPUT, OUTPUT
 
 
 class IOException(Exception):
-	def __init__(self, value, error=None, errno=None):
+	def __init__(self, value, error=None, errno=-1):
 		self.value = value
 		self.error = error
-		self.errno = errno if errno else -1
+		self.errno = errno
 
 	def __str__(self):
 		return repr(self.value+ ' (' + self.error+').')
@@ -18,15 +18,15 @@ class IO:
 		self.it_g = POINTER(comedi_t)
 		self.it_g = comedi_open("/dev/comedi0")
 		if not self.it_g:
-			raise IOException('Could not connect to elevator', _grab("comedi_errno"))
+			raise IOException('Could not connect to elevator')
 
 		for i in xrange(8):
 			self.status |= comedi_dio_config(self.it_g, INPUT.PORT1, i, COMEDI_INPUT)
 			self.status |= comedi_dio_config(self.it_g, OUTPUT.PORT2, i, COMEDI_OUTPUT)
 			self.status |= comedi_dio_config(self.it_g, OUTPUT.PORT3, i+8, COMEDI_OUTPUT)
 			self.status |= comedi_dio_config(self.it_g, INPUT.PORT4, i+16, COMEDI_INPUT)
-
-		raise IOException('Status nonzero after init', _grab("comedi_errno"))
+		if self.status < 0:
+			raise IOException('Status nonzero after init')
 
 	def set_bit(self, channel, value):
 		if value != 0 or value != 1:
