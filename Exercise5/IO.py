@@ -1,5 +1,6 @@
 from schlang import *
 from channels import INPUT, OUTPUT
+from ctypes import byref
 
 
 class IOException(Exception):
@@ -21,15 +22,15 @@ class IO:
 			raise IOException('Could not connect to elevator')
 
 		for i in xrange(8):
-			self.status |= comedi_dio_config(self.it_g, INPUT.PORT1, i, COMEDI_INPUT)
-			self.status |= comedi_dio_config(self.it_g, OUTPUT.PORT2, i, COMEDI_OUTPUT)
-			self.status |= comedi_dio_config(self.it_g, OUTPUT.PORT3, i+8, COMEDI_OUTPUT)
-			self.status |= comedi_dio_config(self.it_g, INPUT.PORT4, i+16, COMEDI_INPUT)
+			self.status |= comedi_dio_config(self.it_g, INPUT.PORT1, i, 0)
+			self.status |= comedi_dio_config(self.it_g, OUTPUT.PORT2, i, 1)
+			self.status |= comedi_dio_config(self.it_g, OUTPUT.PORT3, i+8, 1)
+			self.status |= comedi_dio_config(self.it_g, INPUT.PORT4, i+16, 0)
 		if self.status < 0:
 			raise IOException('Status nonzero after init')
 
 	def set_bit(self, channel, value):
-		if value != 0 or value != 1:
+		if value not in (0, 1):
 			raise IOException("Tried to set value %d to channel %d" % (value, channel))
 		if comedi_dio_write(self.it_g, channel >> 8, channel & 0xff, value) < 0:
 			raise IOException("Could not write value %d to channel %d" % (value, channel))
@@ -40,14 +41,14 @@ class IO:
 
 	def read_bit(self, channel):
 		data = lsampl_t()
-		retval = comedi_dio_read(self.it_g, channel >> 8, channel & 0xff, byteref(data))
+		retval = comedi_dio_read(self.it_g, channel >> 8, channel & 0xff, byref(data))
 		if retval < 0:
 			raise IOException("Could not read from channel %d" % channel)
 		return data
 
 	def read_analog(self, channel):
 		data = lsampl_t()
-		reval = comedi_data_read(self.it_g, channel >> 8, channel & 0xff, 0, AREF_GROUND, byteref(data))
+		reval = comedi_data_read(self.it_g, channel >> 8, channel & 0xff, 0, AREF_GROUND, byref(data))
 		if retval < 0:
 			raise IOException("Could not read from analog channel %d" % channel)
 		return data

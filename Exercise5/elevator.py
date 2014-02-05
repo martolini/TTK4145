@@ -14,7 +14,7 @@ class Elevator:
 	def set_speed(self, speed):
 		if speed > 0:
 			self.direction = OUTPUT.MOTOR_UP
-		else if speed < 0:
+		elif speed < 0:
 			self.direction = OUTPUT.MOTOR_DOWN
 		else:
 			self.stop()
@@ -38,7 +38,7 @@ class Elevator:
 		if floor & 0x02:
 			io.set_bit(FLOOR_IND1, 1)
 		else:
-			io.set_bit(FLOOR_IND1, 0):
+			io.set_bit(FLOOR_IND1, 0)
 		if floor & 0x01:
 			io.set_bit(FLOOR_IND2, 1)
 		else:
@@ -63,7 +63,7 @@ class Elevator:
 
 	def get_floor(self):
 		for floor, sensor in enumerate(INPUT.SENSORS):
-			if sensor:
+			if io.read.bit(sensor):
 				return floor
 		return -1
 
