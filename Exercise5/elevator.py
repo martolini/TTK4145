@@ -2,7 +2,7 @@ from channels import INPUT, OUTPUT
 from IO import io
 from time import sleep
 
-class Elevator():
+class Elevator:
 	def __init__(self):
 		self.direction = OUTPUT.MOTOR_DOWN
 		self.moving = False

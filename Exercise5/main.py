@@ -1,4 +1,4 @@
-from Elevator import *
+from elevator import Elevator
 
 def main():
 	elev = Elevator()
