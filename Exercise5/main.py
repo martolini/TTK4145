@@ -5,7 +5,6 @@ def main():
 	elev.set_speed(300)
 
 	while True:
-		print elev.get_floor()
 		if elev.get_floor() == 0:
 			elev.set_speed(300)
 		elif elev.get_floor() == elev.NUM_FLOORS-1:

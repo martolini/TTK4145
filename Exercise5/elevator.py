@@ -35,14 +35,14 @@ class Elevator:
 		io.write_analog(OUTPUT.MOTOR, 2048)
 
 	def set_floor_indicator(self, floor):
-		if floor & 0x02:
-			io.set_bit(FLOOR_IND1, 1)
-		else:
-			io.set_bit(FLOOR_IND1, 0)
 		if floor & 0x01:
-			io.set_bit(FLOOR_IND2, 1)
+			io.set_bit(OUTPUT.FLOOR_IND1, 1)
 		else:
-			io.set_bit(FLOOR_IND2, 0)
+			io.set_bit(OUTPUT.FLOOR_IND1, 0)
+		if floor & 0x02:
+			io.set_bit(OUTPUT.FLOOR_IND2, 1)
+		else:
+			io.set_bit(OUTPUT.FLOOR_IND2, 0)
 
 	def set_button_lamp(self, floor, light, value):
 		if floor == self.NUM_FLOORS-1 and light == OUTPUT.UP_LIGHTS or floor == 0 and light == OUTPUT.DOWN_LIGHTS:
@@ -63,11 +63,11 @@ class Elevator:
 
 	def get_floor(self):
 		for floor, sensor in enumerate(INPUT.SENSORS):
-			if io.read.bit(sensor):
+			if io.read_bit(sensor):
 				return floor
 		return -1
 
 	def get_button_signal(self, floor, button):
-		return io.read_bit(button[floor])
+		return io.read_bit(button[floor]).value
 
 	
