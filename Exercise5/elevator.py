@@ -9,7 +9,8 @@ class Elevator:
 		self.NUM_FLOORS = INPUT.NUM_FLOORS
 
 		for light in OUTPUT.LIGHTS:
-			io.set_bit(light, 0)
+			if light != -1:
+				io.set_bit(light, 0)
 
 	def set_speed(self, speed):
 		if speed > 0:
